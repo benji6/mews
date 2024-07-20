@@ -25,10 +25,10 @@ export default function view(
     if (secondsElapsed < 0) return;
 
     let display = "";
-    for (const [note, period] of notesAndPeriods.entries())
+    for (const period of notesAndPeriods.values())
       display +=
         (secondsElapsed / SECONDS_PER_BEAT) % period <= SECONDS_PER_BEAT
-          ? period
+          ? "*"
           : "_";
 
     div.textContent = display;

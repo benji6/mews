@@ -2,14 +2,8 @@ import { BEATS, BPM, BUTTON_EL, SECONDS_PER_BEAT } from "./constants";
 import view from "./view";
 
 const notesAndPeriods = new Map<number, number>();
-notesAndPeriods.set(-24, 1);
-notesAndPeriods.set(-19, 2);
-notesAndPeriods.set(-5, 3);
-notesAndPeriods.set(4, 4);
-notesAndPeriods.set(7, 5);
-notesAndPeriods.set(11, 6);
-notesAndPeriods.set(14, 7);
-notesAndPeriods.set(19, 8);
+const notes = [-24, -19, -5, 4, 7, 11, 14, 19];
+for (let i = 0; i < notes.length; i++) notesAndPeriods.set(notes[i], i / 2 + 1);
 
 const chromaticNoteToFrequency = (n: number): number =>
   440 * Math.pow(2, n / 12);
