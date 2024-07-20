@@ -22,13 +22,13 @@ const chromaticNoteToFrequency = (n: number): number =>
 
 const scheduleNote = (
   ctx: AudioContext,
-  startTimeOfWholeTune: number,
+  songStartTime: number,
   chromaticNote: number,
   time: number,
 ) => {
   const osc = ctx.createOscillator();
   osc.frequency.value = chromaticNoteToFrequency(chromaticNote);
-  const startTime = startTimeOfWholeTune + (time / BPM) * 60;
+  const startTime = songStartTime + (time / BPM) * 60;
   const stopTime = startTime + SECONDS_PER_BEAT;
 
   osc.start(startTime);
@@ -58,13 +58,10 @@ button.onclick = () => {
   const masterGain = ctx.createGain();
   masterGain.gain.value = 0.2;
   masterGain.connect(ctx.destination);
+  const startTime = ctx.currentTime + 0.1;
   for (const [note, period] of notesAndPeriods.entries())
     for (let i = 0; i < BEATS / period; i++)
-      scheduleNote(ctx, ctx.currentTime + 0.1, note, i * period).connect(
-        masterGain,
-      );
-
-  const startTime = ctx.currentTime;
+      scheduleNote(ctx, startTime, note, i * period).connect(masterGain);
 
   const animationLoop = () => {
     const secondsElapsed = ctx.currentTime - startTime;
@@ -75,6 +72,7 @@ button.onclick = () => {
       return;
     }
     requestAnimationFrame(animationLoop);
+    if (secondsElapsed < 0) return;
 
     let display = "";
     for (const [note, period] of notesAndPeriods.entries())
