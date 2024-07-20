@@ -1,13 +1,7 @@
-const button = document.querySelector("button");
+import { BEATS, BPM, BUTTON_EL, SECONDS_PER_BEAT } from "./constants";
+import view from "./view";
 
-if (!button) throw Error("Button missing");
-
-const BPM = 140;
-const SECONDS_PER_BEAT = 60 / BPM;
-const BEATS = 64;
-const TOTAL_DURATION_IN_SECONDS = BEATS * SECONDS_PER_BEAT;
-
-const notesAndPeriods = new Map();
+const notesAndPeriods = new Map<number, number>();
 notesAndPeriods.set(-24, 1);
 notesAndPeriods.set(-19, 2);
 notesAndPeriods.set(-5, 3);
@@ -50,10 +44,8 @@ const scheduleNote = (
   return osc.connect(envelopeGain);
 };
 
-button.onclick = () => {
-  const div = document.querySelector("div");
-  if (!div) throw Error("No div!");
-  button.remove();
+BUTTON_EL.onclick = () => {
+  BUTTON_EL.remove();
   const ctx = new AudioContext();
   const masterGain = ctx.createGain();
   masterGain.gain.value = 0.2;
@@ -63,25 +55,5 @@ button.onclick = () => {
     for (let i = 0; i < BEATS / period; i++)
       scheduleNote(ctx, startTime, note, i * period).connect(masterGain);
 
-  const animationLoop = () => {
-    const secondsElapsed = ctx.currentTime - startTime;
-    if (secondsElapsed > TOTAL_DURATION_IN_SECONDS) {
-      div.innerText = "";
-      masterGain.disconnect();
-      document.body.append(button);
-      return;
-    }
-    requestAnimationFrame(animationLoop);
-    if (secondsElapsed < 0) return;
-
-    let display = "";
-    for (const [note, period] of notesAndPeriods.entries())
-      display +=
-        (secondsElapsed / SECONDS_PER_BEAT) % period <= SECONDS_PER_BEAT
-          ? period
-          : "_";
-
-    div.textContent = display;
-  };
-  requestAnimationFrame(animationLoop);
+  view(ctx, startTime, notesAndPeriods, () => masterGain.disconnect());
 };
