@@ -1,4 +1,4 @@
-export const BPM = 140;
+export const BPM = 100;
 export const SECONDS_PER_BEAT = 60 / BPM;
 export const BEATS = 64;
 export const TOTAL_DURATION_IN_SECONDS = BEATS * SECONDS_PER_BEAT;
