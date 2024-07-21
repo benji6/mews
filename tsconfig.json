@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "allowUnreachableCode": false,
+    "forceConsistentCasingInFileNames": true,
+    "module": "ES2020",
+    "moduleResolution": "node",
+    "noUnusedLocals": true,
+    "strict": true,
+    "target": "ES2022"
+  }
+}
