@@ -36,26 +36,28 @@ export default function view(
     requestAnimationFrame(animationLoop);
     if (secondsElapsed < 0) return;
 
+    let display = "";
     canvasContext.clearRect(0, 0, canvasWidth, canvasHeight);
 
-    let display = "";
-    const periods = [...notesAndPeriods.values()];
-    for (let i = 0; i < periods.length; i++) {
-      const period = periods[i];
+    const notes = [...notesAndPeriods.keys()];
+    const lowestNote = Math.min(...notes);
+    const highestNote = Math.max(...notes);
+    const noteRange = highestNote - lowestNote;
+
+    [...notesAndPeriods.entries()].forEach(([note, period], i, { length }) => {
       const isNotePlaying = (secondsElapsed / SECONDS_PER_BEAT) % period <= 1;
       display += isNotePlaying ? "*" : "_";
+      const r =
+        ((smallestCanvasSideLength *
+          0.4 *
+          (note + noteRange / 10 + Math.abs(lowestNote))) /
+          noteRange) *
+        1.1;
 
       canvasContext.beginPath();
-      canvasContext.arc(
-        canvasWidth / 2,
-        canvasHeight / 2,
-        ((smallestCanvasSideLength / 3) * (i + 1)) / periods.length,
-        0,
-        2 * Math.PI,
-      );
+      canvasContext.arc(canvasWidth / 2, canvasHeight / 2, r, 0, 2 * Math.PI);
       canvasContext.stroke();
 
-      const r = ((smallestCanvasSideLength / 3) * (i + 1)) / periods.length;
       const theta =
         (secondsElapsed / SECONDS_PER_BEAT / period) * 2 * Math.PI -
         Math.PI / 2;
@@ -63,13 +65,13 @@ export default function view(
       canvasContext.arc(
         r * Math.cos(theta) + canvasWidth / 2,
         r * Math.sin(theta) + canvasHeight / 2,
-        smallestCanvasSideLength / periods.length / 8,
+        smallestCanvasSideLength / length / 8,
         0,
         2 * Math.PI,
       );
       canvasContext.fillStyle = isNotePlaying ? "red" : "black";
       canvasContext.fill();
-    }
+    });
 
     div.textContent = display;
   };
