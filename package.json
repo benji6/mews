@@ -1,10 +1,12 @@
 {
   "private": true,
   "scripts": {
+    "fmt": "prettier -u --write '**/*'",
     "start": "vite src --open",
-    "test": "tsc --noEmit"
+    "test": "prettier --check -u '**/*' && tsc --noEmit"
   },
   "devDependencies": {
+    "prettier": "^3.3.3",
     "typescript": "^5.5.3",
     "vite": "^5.3.3"
   }
