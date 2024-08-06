@@ -4,6 +4,9 @@ import {
   TOTAL_DURATION_IN_SECONDS,
 } from "./constants";
 
+const getCssVar = (prop: string) =>
+  getComputedStyle(document.documentElement).getPropertyValue(prop).trim();
+
 const div = document.querySelector("div");
 const canvas = document.querySelector("canvas");
 if (!canvas) throw Error("canvas missing");
@@ -37,6 +40,7 @@ export default function view(
     if (secondsElapsed < 0) return;
 
     let display = "";
+    canvasContext.strokeStyle = getCssVar("--color-figure");
     canvasContext.clearRect(0, 0, canvasWidth, canvasHeight);
 
     const notes = [...notesAndPeriods.keys()];
@@ -69,7 +73,9 @@ export default function view(
         0,
         2 * Math.PI,
       );
-      canvasContext.fillStyle = isNotePlaying ? "red" : "black";
+      canvasContext.fillStyle = isNotePlaying
+        ? getCssVar("--color-accent")
+        : getCssVar("--color-figure");
       canvasContext.fill();
     });
 

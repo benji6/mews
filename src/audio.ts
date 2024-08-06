@@ -42,6 +42,14 @@ export default function audio(
   notesAndPeriods: Map<number, number>,
   masterGain: GainNode,
 ) {
+  const compressor = new DynamicsCompressorNode(audioContext, {
+    threshold: -40,
+    knee: 40,
+    ratio: 4,
+    attack: 0,
+    release: SECONDS_PER_BEAT / 8,
+  });
+  compressor.connect(masterGain);
   const delay0 = new DelayNode(audioContext, {
     maxDelayTime: DELAY_TIME,
     delayTime: DELAY_TIME,
@@ -58,12 +66,12 @@ export default function audio(
     .connect(gain1)
     .connect(delay1)
     .connect(new StereoPannerNode(audioContext, { pan: -1 }))
-    .connect(masterGain);
+    .connect(compressor);
   delay1
     .connect(gain0)
     .connect(delay0)
     .connect(new StereoPannerNode(audioContext, { pan: 1 }))
-    .connect(masterGain);
+    .connect(compressor);
 
   for (const [note, period] of notesAndPeriods.entries())
     for (let i = 0; i < BEATS / period; i++) {
@@ -74,6 +82,6 @@ export default function audio(
         i * period,
       );
       outputNode.connect(i % 2 ? gain1 : gain0);
-      outputNode.connect(masterGain);
+      outputNode.connect(compressor);
     }
 }
