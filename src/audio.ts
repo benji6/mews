@@ -1,15 +1,18 @@
 import { BEATS, BPM, SECONDS_PER_BEAT } from "./constants";
 
+const DELAY_DECAY = 1 / 3;
+const DELAY_TIME = (SECONDS_PER_BEAT / 3) * 2;
+
 const chromaticNoteToFrequency = (n: number): number =>
   440 * Math.pow(2, n / 12);
 
 const scheduleNote = (
-  ctx: AudioContext,
+  audioContext: AudioContext,
   songStartTime: number,
   chromaticNote: number,
   time: number,
 ) => {
-  const osc = ctx.createOscillator();
+  const osc = audioContext.createOscillator();
   osc.frequency.value = chromaticNoteToFrequency(chromaticNote);
   const startTime = songStartTime + (time / BPM) * 60;
   const stopTime = startTime + SECONDS_PER_BEAT;
@@ -18,11 +21,11 @@ const scheduleNote = (
   osc.stop(stopTime);
   osc.detune.value = (Math.random() - 0.5) * 10;
 
-  const envelopeGain = ctx.createGain();
+  const envelopeGain = audioContext.createGain();
   envelopeGain.gain.setValueAtTime(0, startTime);
   envelopeGain.gain.linearRampToValueAtTime(
     1,
-    startTime + SECONDS_PER_BEAT / 4,
+    startTime + SECONDS_PER_BEAT / 1024,
   );
   envelopeGain.gain.linearRampToValueAtTime(
     0.75,
@@ -34,12 +37,43 @@ const scheduleNote = (
 };
 
 export default function audio(
-  ctx: AudioContext,
+  audioContext: AudioContext,
   songStartTime: number,
   notesAndPeriods: Map<number, number>,
   masterGain: GainNode,
 ) {
+  const delay0 = new DelayNode(audioContext, {
+    maxDelayTime: DELAY_TIME,
+    delayTime: DELAY_TIME,
+  });
+  const delay1 = new DelayNode(audioContext, {
+    maxDelayTime: DELAY_TIME,
+    delayTime: DELAY_TIME,
+  });
+
+  const gain0 = new GainNode(audioContext, { gain: DELAY_DECAY });
+  const gain1 = new GainNode(audioContext, { gain: DELAY_DECAY });
+
+  delay0
+    .connect(gain1)
+    .connect(delay1)
+    .connect(new StereoPannerNode(audioContext, { pan: -1 }))
+    .connect(masterGain);
+  delay1
+    .connect(gain0)
+    .connect(delay0)
+    .connect(new StereoPannerNode(audioContext, { pan: 1 }))
+    .connect(masterGain);
+
   for (const [note, period] of notesAndPeriods.entries())
-    for (let i = 0; i < BEATS / period; i++)
-      scheduleNote(ctx, songStartTime, note, i * period).connect(masterGain);
+    for (let i = 0; i < BEATS / period; i++) {
+      const outputNode = scheduleNote(
+        audioContext,
+        songStartTime,
+        note,
+        i * period,
+      );
+      outputNode.connect(i % 2 ? gain1 : gain0);
+      outputNode.connect(masterGain);
+    }
 }
