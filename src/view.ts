@@ -3,6 +3,7 @@ import {
   SECONDS_PER_BEAT,
   TOTAL_DURATION_IN_SECONDS,
 } from "./constants";
+import { chordIndexToPeriod } from "./utils";
 
 const getCssVar = (prop: string) =>
   getComputedStyle(document.documentElement).getPropertyValue(prop).trim();
@@ -19,7 +20,7 @@ canvas.width = canvasWidth;
 export default function view(
   audioContext: AudioContext,
   songStartTime: number,
-  notesAndPeriods: Map<number, number>,
+  chord: number[],
   onFinish: () => void,
 ) {
   if (!div) throw Error("div missing");
@@ -43,18 +44,18 @@ export default function view(
     canvasContext.strokeStyle = getCssVar("--color-figure");
     canvasContext.clearRect(0, 0, canvasWidth, canvasHeight);
 
-    const notes = [...notesAndPeriods.keys()];
-    const lowestNote = Math.min(...notes);
-    const highestNote = Math.max(...notes);
+    const lowestNote = Math.min(...chord);
+    const highestNote = Math.max(...chord);
     const noteRange = highestNote - lowestNote;
 
-    [...notesAndPeriods.entries()].forEach(([note, period], i, { length }) => {
+    for (let i = 0; i < chord.length; i++) {
+      const period = chordIndexToPeriod(i);
       const isNotePlaying = (secondsElapsed / SECONDS_PER_BEAT) % period <= 1;
       display += isNotePlaying ? "*" : "_";
       const r =
         ((smallestCanvasSideLength *
           0.4 *
-          (note + noteRange / 10 + Math.abs(lowestNote))) /
+          (chord[i] + noteRange / 10 + Math.abs(lowestNote))) /
           noteRange) *
         1.1;
 
@@ -69,7 +70,7 @@ export default function view(
       canvasContext.arc(
         r * Math.cos(theta) + canvasWidth / 2,
         r * Math.sin(theta) + canvasHeight / 2,
-        smallestCanvasSideLength / length / 8,
+        smallestCanvasSideLength / chord.length / 8,
         0,
         2 * Math.PI,
       );
@@ -77,7 +78,7 @@ export default function view(
         ? getCssVar("--color-accent")
         : getCssVar("--color-figure");
       canvasContext.fill();
-    });
+    }
 
     div.textContent = display;
   };

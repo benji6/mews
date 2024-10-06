@@ -1,4 +1,5 @@
 import { BEATS, BPM, SECONDS_PER_BEAT } from "./constants";
+import { chordIndexToPeriod } from "./utils";
 
 const DELAY_DECAY = 1 / 3;
 const DELAY_TIME = (SECONDS_PER_BEAT / 3) * 2;
@@ -38,9 +39,9 @@ const scheduleNote = (
 
 export default function audio(
   audioContext: AudioContext,
-  songStartTime: number,
-  notesAndPeriods: Map<number, number>,
   masterGain: GainNode,
+  songStartTime: number,
+  chord: number[],
 ) {
   const compressor = new DynamicsCompressorNode(audioContext, {
     threshold: -40,
@@ -73,15 +74,17 @@ export default function audio(
     .connect(new StereoPannerNode(audioContext, { pan: 1 }))
     .connect(compressor);
 
-  for (const [note, period] of notesAndPeriods.entries())
-    for (let i = 0; i < BEATS / period; i++) {
+  for (let i = 0; i < chord.length; i++) {
+    const period = chordIndexToPeriod(i);
+    for (let j = 0; j < BEATS / period; j++) {
       const outputNode = scheduleNote(
         audioContext,
         songStartTime,
-        note,
-        i * period,
+        chord[i],
+        j * period,
       );
-      outputNode.connect(i % 2 ? gain1 : gain0);
+      outputNode.connect(j % 2 ? gain1 : gain0);
       outputNode.connect(compressor);
     }
+  }
 }
