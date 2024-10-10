@@ -41,7 +41,8 @@ export default function audio(
   audioContext: AudioContext,
   masterGain: GainNode,
   songStartTime: number,
-  chord: number[],
+  chord0: number[],
+  chord1: number[],
 ) {
   const compressor = new DynamicsCompressorNode(audioContext, {
     threshold: -40,
@@ -74,13 +75,26 @@ export default function audio(
     .connect(new StereoPannerNode(audioContext, { pan: 1 }))
     .connect(compressor);
 
-  for (let i = 0; i < chord.length; i++) {
+  for (let i = 0; i < chord0.length; i++) {
     const period = chordIndexToPeriod(i);
-    for (let j = 0; j < BEATS / period; j++) {
+    for (let j = 0; j < BEATS / period / 2; j++) {
       const outputNode = scheduleNote(
         audioContext,
         songStartTime,
-        chord[i],
+        chord0[i],
+        j * period,
+      );
+      outputNode.connect(j % 2 ? gain1 : gain0);
+      outputNode.connect(compressor);
+    }
+  }
+  for (let i = 0; i < chord1.length; i++) {
+    const period = chordIndexToPeriod(i);
+    for (let j = Math.ceil(BEATS / period / 2); j < BEATS / period; j++) {
+      const outputNode = scheduleNote(
+        audioContext,
+        songStartTime,
+        chord1[i],
         j * period,
       );
       outputNode.connect(j % 2 ? gain1 : gain0);

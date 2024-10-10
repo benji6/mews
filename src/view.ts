@@ -20,7 +20,8 @@ canvas.width = canvasWidth;
 export default function view(
   audioContext: AudioContext,
   songStartTime: number,
-  chord: number[],
+  chord0: number[],
+  chord1: number[],
   onFinish: () => void,
 ) {
   if (!div) throw Error("div missing");
@@ -30,6 +31,8 @@ export default function view(
 
   const animationLoop = () => {
     const secondsElapsed = audioContext.currentTime - songStartTime;
+    const chord =
+      secondsElapsed < TOTAL_DURATION_IN_SECONDS / 2 ? chord0 : chord1;
     if (secondsElapsed > TOTAL_DURATION_IN_SECONDS) {
       div.innerText = "";
       canvasContext.clearRect(0, 0, canvasWidth, canvasHeight);
