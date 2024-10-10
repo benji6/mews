@@ -11,9 +11,5 @@ html {
 
 button {
   background: var(--color-accent);
-}
-div {
-  font-family: monospace;
-  font-size: 10em;
-  text-align: center;
+  display: block;
 }

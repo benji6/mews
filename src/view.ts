@@ -1,6 +1,7 @@
 import {
   BUTTON_EL,
   SECONDS_PER_BEAT,
+  SECONDS_PER_CHORD,
   TOTAL_DURATION_IN_SECONDS,
 } from "./constants";
 import { chordIndexToPeriod } from "./utils";
@@ -8,7 +9,6 @@ import { chordIndexToPeriod } from "./utils";
 const getCssVar = (prop: string) =>
   getComputedStyle(document.documentElement).getPropertyValue(prop).trim();
 
-const div = document.querySelector("div");
 const canvas = document.querySelector("canvas");
 if (!canvas) throw Error("canvas missing");
 const canvasHeight = 512;
@@ -24,7 +24,6 @@ export default function view(
   chord1: number[],
   onFinish: () => void,
 ) {
-  if (!div) throw Error("div missing");
   if (!canvas) throw Error("canvas missing");
   const canvasContext = canvas.getContext("2d");
   if (!canvasContext) throw Error("failed to get 2d rendering context");
@@ -32,9 +31,8 @@ export default function view(
   const animationLoop = () => {
     const secondsElapsed = audioContext.currentTime - songStartTime;
     const chord =
-      secondsElapsed < TOTAL_DURATION_IN_SECONDS / 2 ? chord0 : chord1;
+      Math.floor(secondsElapsed / SECONDS_PER_CHORD) % 2 ? chord1 : chord0;
     if (secondsElapsed > TOTAL_DURATION_IN_SECONDS) {
-      div.innerText = "";
       canvasContext.clearRect(0, 0, canvasWidth, canvasHeight);
       onFinish();
       document.body.prepend(BUTTON_EL);
@@ -43,7 +41,6 @@ export default function view(
     requestAnimationFrame(animationLoop);
     if (secondsElapsed < 0) return;
 
-    let display = "";
     canvasContext.strokeStyle = getCssVar("--color-figure");
     canvasContext.clearRect(0, 0, canvasWidth, canvasHeight);
 
@@ -54,7 +51,6 @@ export default function view(
     for (let i = 0; i < chord.length; i++) {
       const period = chordIndexToPeriod(i);
       const isNotePlaying = (secondsElapsed / SECONDS_PER_BEAT) % period <= 1;
-      display += isNotePlaying ? "*" : "_";
       const r =
         ((smallestCanvasSideLength *
           0.4 *
@@ -82,8 +78,6 @@ export default function view(
         : getCssVar("--color-figure");
       canvasContext.fill();
     }
-
-    div.textContent = display;
   };
   requestAnimationFrame(animationLoop);
 }
