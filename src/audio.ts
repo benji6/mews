@@ -1,4 +1,4 @@
-import { BEATS, BEATS_PER_CHORD, BPM, SECONDS_PER_BEAT } from "./constants";
+import { BEATS, BEATS_PER_CHORD, SECONDS_PER_BEAT } from "./constants";
 import { chordIndexToPeriod } from "./utils";
 
 const DELAY_DECAY = 1 / 3;
@@ -9,13 +9,11 @@ const chromaticNoteToFrequency = (n: number): number =>
 
 const scheduleNote = (
   audioContext: AudioContext,
-  songStartTime: number,
+  startTime: number,
   chromaticNote: number,
-  time: number,
 ) => {
   const osc = audioContext.createOscillator();
   osc.frequency.value = chromaticNoteToFrequency(chromaticNote);
-  const startTime = songStartTime + (time / BPM) * 60;
   const stopTime = startTime + SECONDS_PER_BEAT;
 
   osc.start(startTime);
@@ -82,9 +80,8 @@ export default function audio(
         const period = chordIndexToPeriod(i);
         const outputNode = scheduleNote(
           audioContext,
-          songStartTime,
+          songStartTime + j * period * SECONDS_PER_BEAT,
           chord1[i],
-          j * period,
         );
         outputNode.connect(j % 2 ? gain1 : gain0);
         outputNode.connect(compressor);
@@ -94,9 +91,8 @@ export default function audio(
         const period = chordIndexToPeriod(i);
         const outputNode = scheduleNote(
           audioContext,
-          songStartTime,
+          songStartTime + j * period * SECONDS_PER_BEAT,
           chord0[i],
-          j * period,
         );
         outputNode.connect(j % 2 ? gain1 : gain0);
         outputNode.connect(compressor);
