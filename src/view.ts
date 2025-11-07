@@ -35,6 +35,7 @@ export default function view(
     centerY: number,
     secondsElapsed: number,
     isActiveChord: boolean,
+    rotateClockwise: boolean,
   ) => {
     const lowestNote = Math.min(...chord);
     const highestNote = Math.max(...chord);
@@ -61,8 +62,9 @@ export default function view(
       canvasContext.stroke();
 
       const theta =
-        (secondsElapsed / SECONDS_PER_BEAT / period) * 2 * Math.PI -
-        Math.PI / 2;
+        (rotateClockwise ? 1 : -1) *
+        ((secondsElapsed / SECONDS_PER_BEAT / period) * 2 * Math.PI -
+          ((rotateClockwise ? 1 : -1) * Math.PI) / 2);
       canvasContext.beginPath();
       canvasContext.arc(
         r * Math.cos(theta) + centerX,
@@ -102,6 +104,7 @@ export default function view(
       canvasHeight / 2,
       secondsElapsed,
       !isChord1Active,
+      true,
     );
 
     drawChord(
@@ -110,6 +113,7 @@ export default function view(
       canvasHeight / 2,
       secondsElapsed,
       isChord1Active,
+      false,
     );
   };
   requestAnimationFrame(animationLoop);
