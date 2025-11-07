@@ -1,4 +1,9 @@
-import { BEATS, BEATS_PER_CHORD, SECONDS_PER_BEAT } from "./constants";
+import {
+  BEATS,
+  BEATS_PER_CHORD,
+  SECONDS_PER_BEAT,
+  TOTAL_DURATION_IN_SECONDS,
+} from "./constants";
 import { chordIndexToPeriod } from "./utils";
 
 const DELAY_DECAY = 1 / 3;
@@ -73,27 +78,22 @@ export default function audio(
     .connect(new StereoPannerNode(audioContext, { pan: 1 }))
     .connect(compressor);
 
-  // TODO break early in inner loop once you are passed BEATS/period...
   for (let j = 0; j < BEATS; j++) {
     if (Math.floor((j / BEATS_PER_CHORD) % 2))
       for (let i = 0; i < chord1.length; i++) {
         const period = chordIndexToPeriod(i);
-        const outputNode = scheduleNote(
-          audioContext,
-          songStartTime + j * period * SECONDS_PER_BEAT,
-          chord1[i],
-        );
+        const noteStartTime = songStartTime + j * period * SECONDS_PER_BEAT;
+        if (noteStartTime >= songStartTime + TOTAL_DURATION_IN_SECONDS) break;
+        const outputNode = scheduleNote(audioContext, noteStartTime, chord1[i]);
         outputNode.connect(j % 2 ? gain1 : gain0);
         outputNode.connect(compressor);
       }
     else
       for (let i = 0; i < chord0.length; i++) {
         const period = chordIndexToPeriod(i);
-        const outputNode = scheduleNote(
-          audioContext,
-          songStartTime + j * period * SECONDS_PER_BEAT,
-          chord0[i],
-        );
+        const noteStartTime = songStartTime + j * period * SECONDS_PER_BEAT;
+        if (noteStartTime >= songStartTime + TOTAL_DURATION_IN_SECONDS) break;
+        const outputNode = scheduleNote(audioContext, noteStartTime, chord0[i]);
         outputNode.connect(j % 2 ? gain1 : gain0);
         outputNode.connect(compressor);
       }
