@@ -33,7 +33,7 @@ const scheduleNote = (
     startTime + SECONDS_PER_BEAT / 3,
   );
   envelopeGain.gain.linearRampToValueAtTime(0, stopTime);
-  setTimeout(() => osc.disconnect, stopTime * 1e3 + 1e3);
+  setTimeout(() => osc.disconnect(), stopTime * 1e3 + 1e3);
   return osc.connect(envelopeGain);
 };
 
