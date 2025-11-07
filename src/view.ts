@@ -1,7 +1,7 @@
 import {
+  BEATS_PER_CHORD,
   BUTTON_EL,
   SECONDS_PER_BEAT,
-  SECONDS_PER_CHORD,
   TOTAL_DURATION_IN_SECONDS,
 } from "./constants";
 import { chordIndexToPeriod } from "./utils";
@@ -28,10 +28,57 @@ export default function view(
   const canvasContext = canvas.getContext("2d");
   if (!canvasContext) throw Error("failed to get 2d rendering context");
 
+  const drawChord = (
+    chord: number[],
+    centerX: number,
+    centerY: number,
+    secondsElapsed: number,
+    isActiveChord: boolean,
+  ) => {
+    const lowestNote = Math.min(...chord);
+    const highestNote = Math.max(...chord);
+    const noteRange = highestNote - lowestNote;
+
+    for (let i = 0; i < chord.length; i++) {
+      const period = chordIndexToPeriod(i);
+
+      let isNotePlaying = false;
+      if (isActiveChord) {
+        const timeIntoPeriod = (secondsElapsed / SECONDS_PER_BEAT) % period;
+        isNotePlaying = timeIntoPeriod <= 1;
+      }
+
+      const r =
+        ((smallestCanvasSideLength *
+          0.2 *
+          (chord[i] + noteRange / 10 + Math.abs(lowestNote))) /
+          noteRange) *
+        1.1;
+
+      canvasContext.beginPath();
+      canvasContext.arc(centerX, centerY, r, 0, 2 * Math.PI);
+      canvasContext.stroke();
+
+      const theta =
+        (secondsElapsed / SECONDS_PER_BEAT / period) * 2 * Math.PI -
+        Math.PI / 2;
+      canvasContext.beginPath();
+      canvasContext.arc(
+        r * Math.cos(theta) + centerX,
+        r * Math.sin(theta) + centerY,
+        smallestCanvasSideLength / chord.length / 16,
+        0,
+        2 * Math.PI,
+      );
+      canvasContext.fillStyle = isNotePlaying
+        ? getCssVar("--color-accent")
+        : getCssVar("--color-figure");
+      canvasContext.fill();
+    }
+  };
+
   const animationLoop = () => {
     const secondsElapsed = audioContext.currentTime - songStartTime;
-    const chord =
-      Math.floor(secondsElapsed / SECONDS_PER_CHORD) % 2 ? chord1 : chord0;
     if (secondsElapsed > TOTAL_DURATION_IN_SECONDS) {
       canvasContext.clearRect(0, 0, canvasWidth, canvasHeight);
       onFinish();
@@ -44,40 +91,25 @@ export default function view(
     canvasContext.strokeStyle = getCssVar("--color-figure");
     canvasContext.clearRect(0, 0, canvasWidth, canvasHeight);
 
-    const lowestNote = Math.min(...chord);
-    const highestNote = Math.max(...chord);
-    const noteRange = highestNote - lowestNote;
+    const currentBeat = Math.floor(secondsElapsed / SECONDS_PER_BEAT);
+    const isChord1Active =
+      Math.floor((currentBeat / (BEATS_PER_CHORD * 2)) % 2) === 1;
 
-    for (let i = 0; i < chord.length; i++) {
-      const period = chordIndexToPeriod(i);
-      const isNotePlaying = (secondsElapsed / SECONDS_PER_BEAT) % period <= 1;
-      const r =
-        ((smallestCanvasSideLength *
-          0.4 *
-          (chord[i] + noteRange / 10 + Math.abs(lowestNote))) /
-          noteRange) *
-        1.1;
+    drawChord(
+      chord0,
+      canvasWidth / 4,
+      canvasHeight / 2,
+      secondsElapsed,
+      !isChord1Active,
+    );
 
-      canvasContext.beginPath();
-      canvasContext.arc(canvasWidth / 2, canvasHeight / 2, r, 0, 2 * Math.PI);
-      canvasContext.stroke();
-
-      const theta =
-        (secondsElapsed / SECONDS_PER_BEAT / period) * 2 * Math.PI -
-        Math.PI / 2;
-      canvasContext.beginPath();
-      canvasContext.arc(
-        r * Math.cos(theta) + canvasWidth / 2,
-        r * Math.sin(theta) + canvasHeight / 2,
-        smallestCanvasSideLength / chord.length / 8,
-        0,
-        2 * Math.PI,
-      );
-      canvasContext.fillStyle = isNotePlaying
-        ? getCssVar("--color-accent")
-        : getCssVar("--color-figure");
-      canvasContext.fill();
-    }
+    drawChord(
+      chord1,
+      (3 * canvasWidth) / 4,
+      canvasHeight / 2,
+      secondsElapsed,
+      isChord1Active,
+    );
   };
   requestAnimationFrame(animationLoop);
 }
