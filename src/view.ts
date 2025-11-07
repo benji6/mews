@@ -12,11 +12,32 @@ const getCssVar = (prop: string) =>
 
 const canvas = document.querySelector("canvas");
 if (!canvas) throw Error("canvas missing");
-const canvasHeight = 512;
-const canvasWidth = 512;
-const smallestCanvasSideLength = Math.min(canvasWidth, canvasHeight);
+let canvasHeight = 512;
+let canvasWidth = 512;
+let smallestCanvasSideLength = Math.min(canvasWidth, canvasHeight);
 canvas.height = canvasHeight;
 canvas.width = canvasWidth;
+
+document.addEventListener("fullscreenchange", () => {
+  if (document.fullscreenElement === canvas) {
+    canvasWidth = window.screen.width;
+    canvasHeight = window.screen.height;
+  } else {
+    canvasWidth = 512;
+    canvasHeight = 512;
+  }
+  smallestCanvasSideLength = Math.min(canvasWidth, canvasHeight);
+  canvas.width = canvasWidth;
+  canvas.height = canvasHeight;
+});
+
+canvas.addEventListener("click", () => {
+  if (document.fullscreenElement) {
+    document.exitFullscreen();
+    return;
+  }
+  canvas.requestFullscreen();
+});
 
 export default function view(
   audioContext: AudioContext,

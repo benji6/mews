@@ -13,3 +13,7 @@ button {
   background: var(--color-accent);
   display: block;
 }
+
+canvas:fullscreen {
+  background: var(--color-ground);
+}
