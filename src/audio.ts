@@ -74,19 +74,18 @@ export default function audio(
     frequency: 500,
     Q: 24,
   });
-
   filter.connect(compressor);
 
   delay0
     .connect(gain1)
     .connect(delay1)
     .connect(new StereoPannerNode(audioContext, { pan: -1 }))
-    .connect(filter);
+    .connect(compressor);
   delay1
     .connect(gain0)
     .connect(delay0)
     .connect(new StereoPannerNode(audioContext, { pan: 1 }))
-    .connect(filter);
+    .connect(compressor);
 
   for (let j = 0; j < BEATS; j++) {
     if (Math.floor((j / BEATS_PER_CHORD) % 2))
@@ -95,8 +94,7 @@ export default function audio(
         const noteStartTime = songStartTime + j * period * SECONDS_PER_BEAT;
         if (noteStartTime >= songStartTime + TOTAL_DURATION_IN_SECONDS) break;
         const outputNode = scheduleNote(audioContext, noteStartTime, chord1[i]);
-        outputNode.connect(j % 2 ? gain1 : gain0);
-        outputNode.connect(filter);
+        outputNode.connect(filter).connect(j % 2 ? gain1 : gain0);
       }
     else
       for (let i = 0; i < chord0.length; i++) {
@@ -104,8 +102,7 @@ export default function audio(
         const noteStartTime = songStartTime + j * period * SECONDS_PER_BEAT;
         if (noteStartTime >= songStartTime + TOTAL_DURATION_IN_SECONDS) break;
         const outputNode = scheduleNote(audioContext, noteStartTime, chord0[i]);
-        outputNode.connect(j % 2 ? gain1 : gain0);
-        outputNode.connect(filter);
+        outputNode.connect(filter).connect(j % 2 ? gain1 : gain0);
       }
   }
 
@@ -121,7 +118,7 @@ export default function audio(
     filter.frequency.value = 20 + normalizedX ** 2 * 4000;
 
     const normalizedY = Math.max(0, Math.min(1, 1 - y / rect.height));
-    filter.Q.value = normalizedY * 50;
+    filter.Q.value = normalizedY * 36;
   };
 
   canvas.onmousemove = (e) => handlePointerMove(e.clientX, e.clientY);
