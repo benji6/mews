@@ -3,6 +3,7 @@ import {
   BEATS_PER_CHORD,
   NOTE_DURATION_IN_SECONDS,
   SECONDS_PER_BEAT,
+  SECONDS_PER_NOTE,
   TOTAL_DURATION_IN_SECONDS,
 } from "./constants";
 import { chordIndexToPeriod } from "./utils";
@@ -30,11 +31,11 @@ const scheduleNote = (
   envelopeGain.gain.setValueAtTime(0, startTime);
   envelopeGain.gain.linearRampToValueAtTime(
     1,
-    startTime + SECONDS_PER_BEAT / 1024,
+    startTime + SECONDS_PER_NOTE / 1024,
   );
   envelopeGain.gain.linearRampToValueAtTime(
-    0.75,
-    startTime + SECONDS_PER_BEAT / 3,
+    0.2,
+    startTime + SECONDS_PER_NOTE / 16,
   );
   envelopeGain.gain.linearRampToValueAtTime(0, stopTime);
   setTimeout(() => osc.disconnect(), stopTime * 1e3 + 1e3);
