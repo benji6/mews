@@ -68,16 +68,24 @@ export default function audio(
   const gain0 = new GainNode(audioContext, { gain: DELAY_DECAY });
   const gain1 = new GainNode(audioContext, { gain: DELAY_DECAY });
 
+  const filter = new BiquadFilterNode(audioContext, {
+    type: "lowpass",
+    frequency: 500,
+    Q: 24,
+  });
+
+  filter.connect(compressor);
+
   delay0
     .connect(gain1)
     .connect(delay1)
     .connect(new StereoPannerNode(audioContext, { pan: -1 }))
-    .connect(compressor);
+    .connect(filter);
   delay1
     .connect(gain0)
     .connect(delay0)
     .connect(new StereoPannerNode(audioContext, { pan: 1 }))
-    .connect(compressor);
+    .connect(filter);
 
   for (let j = 0; j < BEATS; j++) {
     if (Math.floor((j / BEATS_PER_CHORD) % 2))
@@ -87,7 +95,7 @@ export default function audio(
         if (noteStartTime >= songStartTime + TOTAL_DURATION_IN_SECONDS) break;
         const outputNode = scheduleNote(audioContext, noteStartTime, chord1[i]);
         outputNode.connect(j % 2 ? gain1 : gain0);
-        outputNode.connect(compressor);
+        outputNode.connect(filter);
       }
     else
       for (let i = 0; i < chord0.length; i++) {
@@ -96,7 +104,17 @@ export default function audio(
         if (noteStartTime >= songStartTime + TOTAL_DURATION_IN_SECONDS) break;
         const outputNode = scheduleNote(audioContext, noteStartTime, chord0[i]);
         outputNode.connect(j % 2 ? gain1 : gain0);
-        outputNode.connect(compressor);
+        outputNode.connect(filter);
       }
   }
+
+  const frequencyInput = document.getElementById("frequency");
+  if (!(frequencyInput instanceof HTMLInputElement))
+    throw Error("Expected frequency input");
+
+  frequencyInput.oninput = (e) => {
+    if (!e.currentTarget) return;
+    const frequencyValue = (e.currentTarget as HTMLInputElement).valueAsNumber;
+    filter.frequency.value = frequencyValue;
+  };
 }
