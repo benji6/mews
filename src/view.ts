@@ -1,6 +1,7 @@
 import {
   BEATS_PER_CHORD,
   BUTTON_EL,
+  NOTE_DURATION_IN_BEATS,
   SECONDS_PER_BEAT,
   TOTAL_DURATION_IN_SECONDS,
 } from "./constants";
@@ -45,7 +46,7 @@ export default function view(
       let isNotePlaying = false;
       if (isActiveChord) {
         const timeIntoPeriod = (secondsElapsed / SECONDS_PER_BEAT) % period;
-        isNotePlaying = timeIntoPeriod <= 1;
+        isNotePlaying = timeIntoPeriod <= NOTE_DURATION_IN_BEATS;
       }
 
       const r =
@@ -93,7 +94,7 @@ export default function view(
 
     const currentBeat = Math.floor(secondsElapsed / SECONDS_PER_BEAT);
     const isChord1Active =
-      Math.floor((currentBeat / (BEATS_PER_CHORD * 2)) % 2) === 1;
+      Math.floor((currentBeat / BEATS_PER_CHORD) % 2) === 1;
 
     drawChord(
       chord0,

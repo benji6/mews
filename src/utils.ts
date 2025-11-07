@@ -1,1 +1,1 @@
-export const chordIndexToPeriod = (i: number): number => i / 8 + 2;
+export const chordIndexToPeriod = (i: number): number => 1 + i / 8;

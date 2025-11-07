@@ -1,6 +1,7 @@
 import {
   BEATS,
   BEATS_PER_CHORD,
+  NOTE_DURATION_IN_SECONDS,
   SECONDS_PER_BEAT,
   TOTAL_DURATION_IN_SECONDS,
 } from "./constants";
@@ -19,7 +20,7 @@ const scheduleNote = (
 ) => {
   const osc = audioContext.createOscillator();
   osc.frequency.value = chromaticNoteToFrequency(chromaticNote);
-  const stopTime = startTime + SECONDS_PER_BEAT;
+  const stopTime = startTime + NOTE_DURATION_IN_SECONDS;
 
   osc.start(startTime);
   osc.stop(stopTime);
