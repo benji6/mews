@@ -45,10 +45,44 @@ export default function view(
   chord0: number[],
   chord1: number[],
   onFinish: () => void,
+  analyser: AnalyserNode,
 ) {
   if (!canvas) throw Error("canvas missing");
   const canvasContext = canvas.getContext("2d");
   if (!canvasContext) throw Error("failed to get 2d rendering context");
+
+  const bufferLength = analyser.frequencyBinCount;
+  const dataArray = new Uint8Array(bufferLength);
+
+  const drawOscilloscope = () => {
+    analyser.getByteTimeDomainData(dataArray);
+
+    canvasContext.lineWidth = 3;
+    canvasContext.strokeStyle = getCssVar("--color-figure");
+    canvasContext.globalAlpha = 1 / 8;
+    canvasContext.beginPath();
+
+    const sliceWidth = canvasWidth / bufferLength;
+    let x = 0;
+
+    for (let i = 0; i < bufferLength; i++) {
+      const v = dataArray[i] / 128.0;
+      const y = (canvasHeight + v * canvasHeight) / 4;
+
+      if (i === 0) {
+        canvasContext.moveTo(x, y);
+      } else {
+        canvasContext.lineTo(x, y);
+      }
+
+      x += sliceWidth;
+    }
+
+    canvasContext.lineTo(canvasWidth, canvasHeight / 2);
+    canvasContext.stroke();
+    canvasContext.globalAlpha = 1.0;
+    canvasContext.lineWidth = 1;
+  };
 
   const drawChord = (
     chord: number[],
@@ -114,6 +148,8 @@ export default function view(
 
     canvasContext.strokeStyle = getCssVar("--color-figure");
     canvasContext.clearRect(0, 0, canvasWidth, canvasHeight);
+
+    drawOscilloscope();
 
     const currentBeat = Math.floor(secondsElapsed / SECONDS_PER_BEAT);
     const isChord1Active =

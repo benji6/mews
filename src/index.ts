@@ -15,6 +15,13 @@ BUTTON_EL.onclick = () => {
   const masterGain = new GainNode(audioContext, { gain: 0.1 });
   masterGain.connect(audioContext.destination);
   const startTime = audioContext.currentTime + 0.1;
-  audio(audioContext, masterGain, startTime, chord0, chord1);
-  view(audioContext, startTime, chord0, chord1, () => masterGain.disconnect());
+  const analyser = audio(audioContext, masterGain, startTime, chord0, chord1);
+  view(
+    audioContext,
+    startTime,
+    chord0,
+    chord1,
+    () => masterGain.disconnect(),
+    analyser,
+  );
 };

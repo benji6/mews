@@ -49,6 +49,11 @@ export default function audio(
   chord0: number[],
   chord1: number[],
 ) {
+  const analyser = new AnalyserNode(audioContext, {
+    fftSize: 2048,
+    smoothingTimeConstant: 1,
+  });
+
   const compressor = new DynamicsCompressorNode(audioContext, {
     threshold: -40,
     knee: 40,
@@ -56,7 +61,8 @@ export default function audio(
     attack: 0,
     release: SECONDS_PER_BEAT / 8,
   });
-  compressor.connect(masterGain);
+  compressor.connect(analyser);
+  analyser.connect(masterGain);
   const delay0 = new DelayNode(audioContext, {
     maxDelayTime: DELAY_TIME,
     delayTime: DELAY_TIME,
@@ -132,4 +138,6 @@ export default function audio(
     },
     { passive: false },
   );
+
+  return analyser;
 }
