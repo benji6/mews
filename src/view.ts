@@ -12,6 +12,7 @@ const getCssVar = (prop: string) =>
 
 const canvas = document.querySelector("canvas");
 if (!canvas) throw Error("canvas missing");
+canvas.hidden = true;
 let canvasHeight = 512;
 let canvasWidth = 512;
 let smallestCanvasSideLength = Math.min(canvasWidth, canvasHeight);
@@ -49,6 +50,7 @@ export default function view(
 ) {
   if (!canvas) throw Error("canvas missing");
   const canvasContext = canvas.getContext("2d");
+  canvas.hidden = false;
   if (!canvasContext) throw Error("failed to get 2d rendering context");
 
   const bufferLength = analyser.frequencyBinCount;
@@ -139,6 +141,8 @@ export default function view(
     const secondsElapsed = audioContext.currentTime - songStartTime;
     if (secondsElapsed > TOTAL_DURATION_IN_SECONDS) {
       canvasContext.clearRect(0, 0, canvasWidth, canvasHeight);
+      if (document.fullscreenElement) document.exitFullscreen();
+      canvas.hidden = true;
       onFinish();
       document.body.prepend(BUTTON_EL);
       return;
