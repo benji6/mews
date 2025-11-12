@@ -1,7 +1,7 @@
 {
   "private": true,
   "scripts": {
-    "build": "vite build --emptyOutDir --outDir ../dist src",
+    "build": "vite build --base ./ --emptyOutDir --outDir ../dist src",
     "fmt": "prettier -u --write '**/*'",
     "start": "vite src --open",
     "test": "prettier --check -u '**/*' && tsc --noEmit"
