@@ -1,0 +1,1 @@
+:root{--color-accent: #4de;--color-figure: #011;--color-ground: #eff;font-family:sysstem-ui,sans-serif;background:var(--color-ground);color:var(--color-figure)}button{background:var(--color-accent);display:block}canvas:fullscreen{background:var(--color-ground)}
