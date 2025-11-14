@@ -48,7 +48,7 @@ export default function audio(
   songStartTime: number,
   chord0: number[],
   chord1: number[],
-) {
+): { analyser: AnalyserNode; filter: BiquadFilterNode } {
   const analyser = new AnalyserNode(audioContext, {
     fftSize: 2048,
     smoothingTimeConstant: 1,
@@ -112,32 +112,5 @@ export default function audio(
       }
   }
 
-  const canvas = document.querySelector("canvas");
-  if (!canvas) throw Error("canvas missing");
-
-  const handlePointerMove = (clientX: number, clientY: number) => {
-    const rect = canvas.getBoundingClientRect();
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
-
-    const normalizedX = Math.max(0, Math.min(1, x / rect.width));
-    filter.frequency.value = 20 + normalizedX ** 2 * 4000;
-
-    const normalizedY = Math.max(0, Math.min(1, 1 - y / rect.height));
-    filter.Q.value = normalizedY * 36;
-  };
-
-  canvas.onmousemove = (e) => handlePointerMove(e.clientX, e.clientY);
-
-  canvas.addEventListener(
-    "touchmove",
-    (e) => {
-      e.preventDefault();
-      if (e.touches.length)
-        handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
-    },
-    { passive: false },
-  );
-
-  return analyser;
+  return { analyser, filter };
 }

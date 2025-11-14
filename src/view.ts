@@ -1,58 +1,26 @@
 import {
   BEATS_PER_CHORD,
-  BUTTON_EL,
   NOTE_DURATION_IN_BEATS,
   SECONDS_PER_BEAT,
-  TOTAL_DURATION_IN_SECONDS,
 } from "./constants";
 import { chordIndexToPeriod } from "./utils";
 
 const getCssVar = (prop: string) =>
   getComputedStyle(document.documentElement).getPropertyValue(prop).trim();
 
-const canvas = document.querySelector("canvas");
-if (!canvas) throw Error("canvas missing");
-canvas.hidden = true;
-let canvasHeight = 512;
-let canvasWidth = 512;
-let smallestCanvasSideLength = Math.min(canvasWidth, canvasHeight);
-canvas.height = canvasHeight;
-canvas.width = canvasWidth;
-
-document.addEventListener("fullscreenchange", () => {
-  if (document.fullscreenElement === canvas) {
-    canvasWidth = window.screen.width;
-    canvasHeight = window.screen.height;
-  } else {
-    canvasWidth = 512;
-    canvasHeight = 512;
-  }
-  smallestCanvasSideLength = Math.min(canvasWidth, canvasHeight);
-  canvas.width = canvasWidth;
-  canvas.height = canvasHeight;
-});
-
-canvas.addEventListener("click", () => {
-  if (document.fullscreenElement) {
-    document.exitFullscreen();
-    return;
-  }
-  canvas.requestFullscreen();
-});
-
 export default function view(
-  audioContext: AudioContext,
-  songStartTime: number,
+  canvas: HTMLCanvasElement,
+  canvasWidth: number,
+  canvasHeight: number,
+  secondsElapsed: number,
   chord0: number[],
   chord1: number[],
-  onFinish: () => void,
   analyser: AnalyserNode,
 ) {
-  if (!canvas) throw Error("canvas missing");
   const canvasContext = canvas.getContext("2d");
-  canvas.hidden = false;
   if (!canvasContext) throw Error("failed to get 2d rendering context");
 
+  const smallestCanvasSideLength = Math.min(canvasWidth, canvasHeight);
   const bufferLength = analyser.frequencyBinCount;
   const dataArray = new Uint8Array(bufferLength);
 
@@ -90,7 +58,6 @@ export default function view(
     chord: number[],
     centerX: number,
     centerY: number,
-    secondsElapsed: number,
     isActiveChord: boolean,
     rotateClockwise: boolean,
   ) => {
@@ -137,45 +104,21 @@ export default function view(
     }
   };
 
-  const animationLoop = () => {
-    const secondsElapsed = audioContext.currentTime - songStartTime;
-    if (secondsElapsed > TOTAL_DURATION_IN_SECONDS) {
-      canvasContext.clearRect(0, 0, canvasWidth, canvasHeight);
-      if (document.fullscreenElement) document.exitFullscreen();
-      canvas.hidden = true;
-      onFinish();
-      document.body.prepend(BUTTON_EL);
-      return;
-    }
-    requestAnimationFrame(animationLoop);
-    if (secondsElapsed < 0) return;
+  canvasContext.strokeStyle = getCssVar("--color-figure");
+  canvasContext.clearRect(0, 0, canvasWidth, canvasHeight);
 
-    canvasContext.strokeStyle = getCssVar("--color-figure");
-    canvasContext.clearRect(0, 0, canvasWidth, canvasHeight);
+  drawOscilloscope();
 
-    drawOscilloscope();
+  const currentBeat = Math.floor(secondsElapsed / SECONDS_PER_BEAT);
+  const isChord1Active = Math.floor((currentBeat / BEATS_PER_CHORD) % 2) === 1;
 
-    const currentBeat = Math.floor(secondsElapsed / SECONDS_PER_BEAT);
-    const isChord1Active =
-      Math.floor((currentBeat / BEATS_PER_CHORD) % 2) === 1;
+  drawChord(chord0, canvasWidth / 4, canvasHeight / 2, !isChord1Active, true);
 
-    drawChord(
-      chord0,
-      canvasWidth / 4,
-      canvasHeight / 2,
-      secondsElapsed,
-      !isChord1Active,
-      true,
-    );
-
-    drawChord(
-      chord1,
-      (3 * canvasWidth) / 4,
-      canvasHeight / 2,
-      secondsElapsed,
-      isChord1Active,
-      false,
-    );
-  };
-  requestAnimationFrame(animationLoop);
+  drawChord(
+    chord1,
+    (3 * canvasWidth) / 4,
+    canvasHeight / 2,
+    isChord1Active,
+    false,
+  );
 }
