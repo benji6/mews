@@ -2,9 +2,9 @@
   "private": true,
   "scripts": {
     "build": "vite build --base ./ --emptyOutDir --outDir ../dist src",
-    "fmt": "prettier -u --write '**/*'",
+    "fmt": "prettier -u --write '**/*' '!dist/**'",
     "start": "vite src --open",
-    "test": "prettier --check -u '**/*' && tsc --noEmit"
+    "test": "prettier --check -u '**/*' '!dist/**' && tsc --noEmit"
   },
   "devDependencies": {
     "prettier": "^3.3.3",
