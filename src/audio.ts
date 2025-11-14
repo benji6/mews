@@ -1,12 +1,8 @@
 import {
-  BEATS,
-  BEATS_PER_CHORD,
   NOTE_DURATION_IN_SECONDS,
   SECONDS_PER_BEAT,
   SECONDS_PER_NOTE,
-  TOTAL_DURATION_IN_SECONDS,
 } from "./constants";
-import { chordIndexToPeriod } from "./utils";
 
 const DELAY_DECAY = 1 / 3;
 const DELAY_TIME = (SECONDS_PER_BEAT / 3) * 2;
@@ -45,9 +41,7 @@ const scheduleNote = (
 export default function audio(
   audioContext: AudioContext,
   masterGain: GainNode,
-  songStartTime: number,
-  chord0: number[],
-  chord1: number[],
+  score: Record<number, number[]>,
 ): { analyser: AnalyserNode; filter: BiquadFilterNode } {
   const analyser = new AnalyserNode(audioContext, {
     fftSize: 2048,
@@ -93,23 +87,12 @@ export default function audio(
     .connect(new StereoPannerNode(audioContext, { pan: 1 }))
     .connect(compressor);
 
-  for (let j = 0; j < BEATS; j++) {
-    if (Math.floor((j / BEATS_PER_CHORD) % 2))
-      for (let i = 0; i < chord1.length; i++) {
-        const period = chordIndexToPeriod(i);
-        const noteStartTime = songStartTime + j * period * SECONDS_PER_BEAT;
-        if (noteStartTime >= songStartTime + TOTAL_DURATION_IN_SECONDS) break;
-        const outputNode = scheduleNote(audioContext, noteStartTime, chord1[i]);
-        outputNode.connect(filter).connect(j % 2 ? gain1 : gain0);
-      }
-    else
-      for (let i = 0; i < chord0.length; i++) {
-        const period = chordIndexToPeriod(i);
-        const noteStartTime = songStartTime + j * period * SECONDS_PER_BEAT;
-        if (noteStartTime >= songStartTime + TOTAL_DURATION_IN_SECONDS) break;
-        const outputNode = scheduleNote(audioContext, noteStartTime, chord0[i]);
-        outputNode.connect(filter).connect(j % 2 ? gain1 : gain0);
-      }
+  let i = 0;
+  for (const [startTime, notes] of Object.entries(score)) {
+    for (const note of notes) {
+      const outputNode = scheduleNote(audioContext, Number(startTime), note);
+      outputNode.connect(filter).connect(i++ % 2 ? gain1 : gain0);
+    }
   }
 
   return { analyser, filter };

@@ -1,5 +1,12 @@
 import audio from "./audio";
-import { BUTTON_EL, TOTAL_DURATION_IN_SECONDS } from "./constants";
+import {
+  BEATS,
+  BEATS_PER_CHORD,
+  BUTTON_EL,
+  SECONDS_PER_BEAT,
+  TOTAL_DURATION_IN_SECONDS,
+} from "./constants";
+import { chordIndexToPeriod, sortedDefaultDict } from "./utils";
 import view from "./view";
 
 export default function controller(chord0: number[], chord1: number[]) {
@@ -12,16 +19,29 @@ export default function controller(chord0: number[], chord1: number[]) {
     masterGain.connect(audioContext.destination);
     const songStartTime = audioContext.currentTime + 0.1;
 
+    const score = sortedDefaultDict(Array<number>);
+
+    for (let j = 0; j < BEATS; j++) {
+      if (Math.floor((j / BEATS_PER_CHORD) % 2))
+        for (let i = 0; i < chord1.length; i++) {
+          const noteStartTime =
+            songStartTime + j * chordIndexToPeriod(i) * SECONDS_PER_BEAT;
+          if (noteStartTime >= songStartTime + TOTAL_DURATION_IN_SECONDS) break;
+          score[noteStartTime].push(chord1[i]);
+        }
+      else
+        for (let i = 0; i < chord0.length; i++) {
+          const noteStartTime =
+            songStartTime + j * chordIndexToPeriod(i) * SECONDS_PER_BEAT;
+          if (noteStartTime >= songStartTime + TOTAL_DURATION_IN_SECONDS) break;
+          score[noteStartTime].push(chord0[i]);
+        }
+    }
+
     const canvas = document.querySelector("canvas");
     if (!canvas) throw Error("canvas missing");
 
-    const { analyser, filter } = audio(
-      audioContext,
-      masterGain,
-      songStartTime,
-      chord0,
-      chord1,
-    );
+    const { analyser, filter } = audio(audioContext, masterGain, score);
 
     const handlePointerMove = (clientX: number, clientY: number) => {
       const rect = canvas.getBoundingClientRect();
@@ -91,6 +111,8 @@ export default function controller(chord0: number[], chord1: number[]) {
         canvasWidth,
         canvasHeight,
         secondsElapsed,
+        score,
+        audioContext.currentTime,
         chord0,
         chord1,
         analyser,
