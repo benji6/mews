@@ -57,6 +57,11 @@ export default function controller(chord0: number[], chord1: number[]) {
 
     canvas.onmousemove = (e) => handlePointerMove(e.clientX, e.clientY);
 
+    canvas.onmouseleave = () => {
+      filter.Q.value = 0;
+      filter.frequency.value = 20000;
+    };
+
     canvas.addEventListener(
       "touchmove",
       (e) => {
@@ -66,6 +71,16 @@ export default function controller(chord0: number[], chord1: number[]) {
       },
       { passive: false },
     );
+
+    canvas.addEventListener("touchend", () => {
+      filter.Q.value = 0;
+      filter.frequency.value = 20000;
+    });
+
+    canvas.addEventListener("touchcancel", () => {
+      filter.Q.value = 0;
+      filter.frequency.value = 20000;
+    });
 
     let canvasWidth = 512;
     let canvasHeight = 512;

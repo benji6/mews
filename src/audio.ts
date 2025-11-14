@@ -71,8 +71,8 @@ export default function audio(
 
   const filter = new BiquadFilterNode(audioContext, {
     type: "lowpass",
-    frequency: 500,
-    Q: 24,
+    frequency: 20000,
+    Q: 0,
   });
   filter.connect(compressor);
 
